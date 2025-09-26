@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krishi-Mitra: Smart Agri-Advisory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Changed to UMD version for better browser compatibility -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light grey background */
+        }
+        .kannada-label {
+            font-size: 0.8rem;
+            color: #555;
+        }
+        .main-icon {
+            width: 64px;
+            height: 64px;
+        }
+        .weather-icon {
+            width: 48px;
+            height: 48px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .btn-primary {
+            background-color: #22c55e; /* Green-500 */
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #16a34a; /* Green-600 */
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #22c55e;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-gray-50">
+        <!-- Header -->
+        <header class="bg-white shadow-md sticky top-0 z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <img src="https://placehold.co/50x50/22c55e/ffffff?text=KM" alt="Krishi-Mitra Logo" class="rounded-full">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">Krishi-Mitra</h1>
+                        <p class="text-sm text-gray-500">ಕೃಷಿ-ಮಿತ್ರ</p>
+                    </div>
+                </div>
+                <!-- User Profile Section -->
+                <div class="relative">
+                    <button id="profile-button" class="flex items-center space-x-2 focus:outline-none">
+                        <span class="font-semibold text-gray-700 hidden sm:block">Ravi Kumar</span>
+                        <img src="https://placehold.co/40x40/e2e8f0/334155?text=RK" alt="User Avatar" class="rounded-full w-10 h-10 border-2 border-transparent hover:border-green-500 transition">
+                        <i data-lucide="chevron-down" class="h-5 w-5 text-gray-600"></i>
+                    </button>
+                    <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-20 ring-1 ring-black ring-opacity-5">
+                        <div class="p-4 border-b">
+                            <p class="font-bold text-gray-800">Ravi Kumar</p>
+                            <p id="location" class="text-sm text-gray-500">Mangaluru, Karnataka</p>
+                        </div>
+                        <div class="py-1">
+                             <div class="px-4 py-2 text-sm text-gray-700 flex justify-between items-center">
+                                <span>Current Time:</span>
+                                <span id="date-time" class="font-semibold"></span>
+                             </div>
+                             <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Farm Details</a>
+                             <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Account Settings</a>
+                        </div>
+                        <div class="border-t py-1">
+                             <a href="#" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+            <!-- Main Dashboard -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Irrigation Advisory -->
+                <div id="irrigation-card" class="card items-center justify-center text-center">
+                     <!-- This content will be dynamically generated by JavaScript -->
+                     <div class="flex items-center justify-center h-full">
+                        <div class="loader"></div>
+                     </div>
+                </div>
+
+                <!-- Predictive Crop Analysis -->
+                <div id="crop-analysis-card" class="card text-center">
+                    <div id="crop-analysis-initial">
+                        <div class="flex-grow">
+                            <i data-lucide="bar-chart-3" class="main-icon text-purple-500 mb-3 mx-auto"></i>
+                            <h2 class="text-xl font-bold text-gray-800 mb-1">Predictive Crop Analysis</h2>
+                            <p class="kannada-label mb-3">ಬೆಳೆ ವಿಶ್ಲೇಷಣೆ</p>
+                            <p class="text-gray-600 mb-4">Analyze soil data to find the most suitable crop.</p>
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-left bg-gray-50 p-3 rounded-lg mb-4">
+                                <p><strong>Nitrogen (N):</strong> <span id="soil-n">--</span> kg/ha</p>
+                                <p><strong>Phosphorus (P):</strong> <span id="soil-p">--</span> kg/ha</p>
+                                <p><strong>Potassium (K):</strong> <span id="soil-k">--</span> kg/ha</p>
+                                <p><strong>Moisture:</strong> <span id="soil-moisture">--</span>%</p>
+                            </div>
+                        </div>
+                        <button id="analyze-crop-btn" class="btn-primary w-full mt-auto">
+                            <i data-lucide="play" class="inline-block mr-2 h-5 w-5"></i>
+                            Analyze Now
+                        </button>
+                    </div>
+                    <div id="crop-analysis-loading" class="hidden flex-grow flex flex-col items-center justify-center">
+                        <div class="loader"></div>
+                        <p class="mt-4 text-gray-600">Analyzing soil data...</p>
+                    </div>
+                    <div id="crop-analysis-result" class="hidden flex-grow flex flex-col items-center justify-center">
+                        <!-- Result injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Pest Helper -->
+                <div class="card items-center justify-center text-center">
+                    <i data-lucide="scan-eye" class="main-icon text-blue-500 mb-3"></i>
+                    <h2 class="text-xl font-bold text-gray-800 mb-1">Pest & Disease Helper</h2>
+                    <p class="kannada-label mb-3">ಕೀಟ ಮತ್ತು ರೋಗ ಪತ್ತೆ</p>
+                    <p class="text-gray-600 mb-4 flex-grow">Upload a photo of the affected crop to get advice.</p>
+                    <label for="pest-upload" class="btn-primary cursor-pointer w-full mt-auto">
+                        <i data-lucide="upload" class="inline-block mr-2 h-5 w-5"></i>
+                        Upload Photo
+                    </label>
+                    <input type="file" id="pest-upload" class="hidden" accept="image/*">
+                </div>
+                
+                <!-- Current Weather -->
+                <div id="weather-card" class="card items-center justify-center text-center">
+                    <!-- This content will be dynamically generated by JavaScript -->
+                     <div class="flex items-center justify-center h-full">
+                        <div class="loader"></div>
+                     </div>
+                </div>
+            </div>
+
+            <!-- Pest Analysis Modal -->
+            <div id="analysis-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div class="card w-full max-w-lg">
+                    <div id="analysis-content">
+                        <h2 class="text-2xl font-bold text-center mb-4">Analyzing Crop Image...</h2>
+                        <p class="kannada-label text-center mb-6">ಬೆಳೆ ಚಿತ್ರವನ್ನು ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ...</p>
+                        <img id="uploaded-image-preview" src="" alt="Uploaded crop" class="max-h-64 w-auto mx-auto rounded-lg mb-6 hidden">
+                        <div id="analysis-loader" class="loader mx-auto"></div>
+                    </div>
+                    <div id="analysis-result" class="hidden">
+                        <h2 class="text-2xl font-bold text-center mb-2 text-red-600" id="disease-name"></h2>
+                        <p class="kannada-label text-center mb-4" id="disease-name-kn"></p>
+                        <!-- Replaced invalid text with a proper image tag -->
+                        <img id="disease-image" src="https://placehold.co/400x250/e2e8f0/94a3b8?text=Affected+Crop" alt="Affected Crop" class="w-full h-48 object-cover rounded-lg mb-4">
+                        <p class="text-gray-700 mb-4"><strong>Symptoms:</strong> <span id="disease-symptoms"></span></p>
+                        <p class="text-gray-700 mb-6"><strong>Recommendation:</strong> <span id="disease-recommendation"></span></p>
+                        <p class="text-sm text-gray-500 p-3 bg-gray-100 rounded-lg"><strong>Disclaimer:</strong> This is an AI-generated suggestion. Please consult a local agricultural expert for confirmation.</p>
+                        <button id="close-modal" class="btn-primary w-full mt-6">Close</button>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Weather Forecast & Crop Calendar -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 5-Day Forecast -->
+                <div class="lg:col-span-2 card">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">5-Day Weather Forecast</h2>
+                    <div id="forecast-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 text-center">
+                        <!-- Forecast items will be injected here by JS -->
+                        <div class="flex items-center justify-center h-24">
+                            <div class="loader"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Crop Calendar -->
+                <div class="card">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Paddy Rice Calendar</h2>
+                    <ul class="space-y-3">
+                        <li class="flex items-center text-gray-700">
+                            <i data-lucide="check-circle-2" class="h-5 w-5 text-green-500 mr-3"></i>
+                            <span><strong>Jun-Jul:</strong> Nursery & Planting</span>
+                        </li>
+                        <li class="flex items-center text-gray-700">
+                            <i data-lucide="check-circle-2" class="h-5 w-5 text-green-500 mr-3"></i>
+                            <span><strong>Aug-Sep:</strong> Tillering Stage</span>
+                        </li>
+                        <li class="flex items-center font-semibold text-blue-600">
+                            <i data-lucide="loader-2" class="h-5 w-5 mr-3 animate-spin"></i>
+                            <span><strong>Sep-Oct:</strong> Flowering Stage (Current)</span>
+                        </li>
+                        <li class="flex items-center text-gray-500">
+                            <i data-lucide="circle" class="h-5 w-5 mr-3"></i>
+                            <span><strong>Oct-Nov:</strong> Harvesting</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            
+            // --- CONFIGURATION ---
+            const MANGALURU_COORDS = { lat: 12.9141, lon: 74.8560 };
+            // IMPORTANT: Replace with your own OpenWeatherMap API key
+            const API_KEY = '30d4741c779ba94c470ca1f63045390a'; 
+
+            // --- USER PROFILE DROPDOWN ---
+            const profileButton = document.getElementById('profile-button');
+            const profileDropdown = document.getElementById('profile-dropdown');
+
+            profileButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                profileDropdown.classList.toggle('hidden');
+            });
+
+            window.addEventListener('click', (event) => {
+                if (!profileDropdown.classList.contains('hidden') && !profileButton.contains(event.target)) {
+                    profileDropdown.classList.add('hidden');
+                }
+            });
+
+            // --- DATE & TIME ---
+            function updateDateTime() {
+                const now = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                document.getElementById('date-time').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            }
+            updateDateTime();
+            setInterval(updateDateTime, 1000 * 60);
+
+            // --- WEATHER & ADVISORY ---
+            async function getWeatherData(lat, lon) {
+                try {
+                    const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
+                    const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
+
+                    const [weatherResponse, forecastResponse] = await Promise.all([
+                        fetch(weatherUrl),
+                        fetch(forecastUrl)
+                    ]);
+                    
+                    if (!weatherResponse.ok || !forecastResponse.ok) {
+                        throw new Error('Failed to fetch weather data. Please check your API key.');
+                    }
+
+                    const weatherData = await weatherResponse.json();
+                    const forecastData = await forecastResponse.json();
+                    
+                    updateUICurrentWeather(weatherData);
+                    updateUIForecast(forecastData);
+                    updateIrrigationAdvisory(forecastData);
+
+                } catch (error) {
+                    console.error("Weather Fetch Error:", error);
+                    document.getElementById('weather-card').innerHTML = `<p class="text-red-500">Could not load weather data.</p>`;
+                    document.getElementById('irrigation-card').innerHTML = `<p class="text-red-500">Could not generate advisory.</p>`;
+                    document.getElementById('forecast-container').innerHTML = `<p class="text-red-500 col-span-5">Could not load forecast.</p>`;
+                }
+            }
+            
+            function updateUICurrentWeather(data) {
+                const weatherCard = document.getElementById('weather-card');
+                weatherCard.innerHTML = `
+                    <img src="https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png" alt="${data.weather[0].description}" class="weather-icon mb-2">
+                    <h2 class="text-xl font-bold text-gray-800 mb-1">Current Weather</h2>
+                    <p class="kannada-label mb-2">ಪ್ರಸ್ತುತ ಹವಾಮಾನ</p>
+                    <p class="text-4xl font-bold text-gray-900">${Math.round(data.main.temp)}°C</p>
+                    <p class="text-gray-600 capitalize">${data.weather[0].description}</p>
+                    <p class="text-sm text-gray-500 mt-1">Humidity: ${data.main.humidity}%</p>
+                `;
+            }
+
+            function updateUIForecast(data) {
+                const forecastContainer = document.getElementById('forecast-container');
+                forecastContainer.innerHTML = ''; // Clear loader
+                
+                const dailyForecasts = {};
+                data.list.forEach(item => {
+                    const date = new Date(item.dt * 1000).toISOString().split('T')[0];
+                    if (!dailyForecasts[date]) {
+                        dailyForecasts[date] = item;
+                    }
+                });
+
+                Object.values(dailyForecasts).slice(0, 5).forEach((forecast, index) => {
+                    const date = new Date(forecast.dt * 1000);
+                    const dayName = index === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' });
+                    
+                    const forecastEl = document.createElement('div');
+                    forecastEl.className = 'flex flex-col items-center p-3 bg-gray-50 rounded-lg';
+                    forecastEl.innerHTML = `
+                        <p class="font-semibold text-gray-700">${dayName}</p>
+                        <img src="https://openweathermap.org/img/wn/${forecast.weather[0].icon}.png" alt="${forecast.weather[0].description}" class="w-12 h-12">
+                        <p class="font-bold text-lg">${Math.round(forecast.main.temp_max)}°C</p>
+                        <p class="text-sm text-gray-500">${Math.round(forecast.main.temp_min)}°C</p>
+                    `;
+                    forecastContainer.appendChild(forecastEl);
+                });
+            }
+
+            function updateIrrigationAdvisory(forecastData) {
+                const irrigationCard = document.getElementById('irrigation-card');
+                const willRain = forecastData.list.slice(0, 8).some(item => item.pop > 0.4);
+
+                if (willRain) {
+                    irrigationCard.innerHTML = `
+                        <i data-lucide="cloud-rain" class="main-icon text-red-500 mb-3"></i>
+                        <h2 class="text-xl font-bold text-red-600 mb-1">No Irrigation Needed</h2>
+                        <p class="kannada-label mb-3">ನೀರಾವರಿ ಅಗತ್ಯವಿಲ್ಲ</p>
+                        <p class="text-gray-600">Rain is expected in the next 24 hours. Conserve water.</p>
+                    `;
+                } else {
+                    irrigationCard.innerHTML = `
+                        <i data-lucide="droplets" class="main-icon text-green-500 mb-3"></i>
+                        <h2 class="text-xl font-bold text-green-600 mb-1">Irrigate Today</h2>
+                        <p class="kannada-label mb-3">ಇಂದು ನೀರಾವರಿ ಮಾಡಿ</p>
+                        <p class="text-gray-600">The soil may be dry. Proper irrigation is recommended for crop health.</p>
+                    `;
+                }
+                lucide.createIcons();
+            }
+
+            // --- PEST ANALYSIS ---
+            const pestUploadInput = document.getElementById('pest-upload');
+            const modal = document.getElementById('analysis-modal');
+            const closeModalBtn = document.getElementById('close-modal');
+
+            const mockPestData = [
+                {
+                    name: "Brown Spot", name_kn: "ಕಂದು ಚುಕ್ಕೆ ರೋಗ",
+                    symptoms: "Small, circular, dark brown to yellowish-brown spots on leaves, sheaths, and glumes.",
+                    recommendation: "Apply a protective fungicide like Mancozeb or Propiconazole. Ensure balanced nutrient management and avoid water stress.",
+                    imageUrl: "https://placehold.co/400x250/c2410c/ffffff?text=Brown+Spot"
+                },
+                {
+                    name: "Bacterial Blight", name_kn: "ಬ್ಯಾಕ್ಟೀರಿಯಾದ ರೋಗ",
+                    symptoms: "Water-soaked streaks on leaves that turn yellow or white. In severe cases, 'kresek' or wilting of seedlings occurs.",
+                    recommendation: "Ensure proper field drainage. Apply streptomycin-sulfate or copper-based bactericides as a foliar spray. Use resistant varieties.",
+                    imageUrl: "https://placehold.co/400x250/facc15/000000?text=Bacterial+Blight"
+                },
+                {
+                    name: "Rice Blast", name_kn: "ಭತ್ತದ ಬೆಂಕಿ ರೋಗ",
+                    symptoms: "Diamond-shaped lesions with a greyish center and brown margins on leaves, nodes, and panicles.",
+                    recommendation: "Use resistant varieties. Apply fungicides like Tricyclazole or Isoprothiolane. Manage nitrogen application carefully.",
+                    imageUrl: "https://placehold.co/400x250/7f1d1d/ffffff?text=Rice+Blast"
+                }
+            ];
+
+            pestUploadInput.addEventListener('change', function(event) {
+                if (event.target.files && event.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        document.getElementById('uploaded-image-preview').src = e.target.result;
+                        document.getElementById('uploaded-image-preview').classList.remove('hidden');
+                    }
+                    reader.readAsDataURL(event.target.files[0]);
+
+                    modal.classList.remove('hidden');
+                    document.getElementById('analysis-result').classList.add('hidden');
+                    document.getElementById('analysis-content').classList.remove('hidden');
+
+                    setTimeout(() => {
+                        const randomDiagnosis = mockPestData[Math.floor(Math.random() * mockPestData.length)];
+                        document.getElementById('disease-name').textContent = randomDiagnosis.name;
+                        document.getElementById('disease-name-kn').textContent = randomDiagnosis.name_kn;
+                        document.getElementById('disease-symptoms').textContent = randomDiagnosis.symptoms;
+                        document.getElementById('disease-recommendation').textContent = randomDiagnosis.recommendation;
+                        document.getElementById('disease-image').src = randomDiagnosis.imageUrl;
+                        
+                        document.getElementById('analysis-content').classList.add('hidden');
+                        document.getElementById('analysis-result').classList.remove('hidden');
+                    }, 3000);
+                }
+            });
+
+            closeModalBtn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+                pestUploadInput.value = '';
+            });
+
+            // --- PREDICTIVE CROP ANALYSIS ---
+            function setupCropAnalysis() {
+                const analyzeBtn = document.getElementById('analyze-crop-btn');
+                const initialView = document.getElementById('crop-analysis-initial');
+                const loadingView = document.getElementById('crop-analysis-loading');
+                const resultView = document.getElementById('crop-analysis-result');
+
+                // Mock soil sensor data for Mangaluru
+                const mockSoilData = {
+                    n: 135, // Ideal for rice: ~120-150 kg/ha
+                    p: 55,  // Ideal for rice: ~50-60 kg/ha
+                    k: 45,  // Ideal for rice: ~40-50 kg/ha
+                    moisture: 80 // High moisture for paddy
+                };
+                
+                document.getElementById('soil-n').textContent = mockSoilData.n;
+                document.getElementById('soil-p').textContent = mockSoilData.p;
+                document.getElementById('soil-k').textContent = mockSoilData.k;
+                document.getElementById('soil-moisture').textContent = mockSoilData.moisture;
+
+                analyzeBtn.addEventListener('click', () => {
+                    initialView.classList.add('hidden');
+                    loadingView.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        // Simple logic for recommendation
+                        let resultHtml = '';
+                        if (mockSoilData.moisture > 70 && mockSoilData.n > 100 && mockSoilData.p > 40) {
+                            resultHtml = `
+                                <h3 class="text-lg font-bold text-gray-800">Recommended Crop:</h3>
+                                <i data-lucide="leaf" class="text-green-500 h-16 w-16 my-2"></i>
+                                <p class="text-2xl font-bold text-green-600">Paddy Rice</p>
+                                <p class="text-sm text-gray-600 mt-2">High moisture and balanced NPK levels are ideal for rice cultivation.</p>
+                            `;
+                        } else {
+                             resultHtml = `
+                                <h3 class="text-lg font-bold text-gray-800">Recommended Crop:</h3>
+                                <i data-lucide="barley" class="text-yellow-600 h-16 w-16 my-2"></i>
+                                <p class="text-2xl font-bold text-yellow-700">Ragi (Finger Millet)</p>
+                                <p class="text-sm text-gray-600 mt-2">Conditions are suitable for drought-resistant crops like Ragi.</p>
+                            `;
+                        }
+                        
+                        loadingView.classList.add('hidden');
+                        resultView.innerHTML = resultHtml;
+                        resultView.classList.remove('hidden');
+                        lucide.createIcons();
+                    }, 2500);
+                });
+            }
+
+            // --- INITIALIZATION ---
+            getWeatherData(MANGALURU_COORDS.lat, MANGALURU_COORDS.lon);
+            setupCropAnalysis();
+        });
+    </script>
+</body>
+</html>
+
